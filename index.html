@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WTIChat - India's 1st AI</title>
+    <title>WTIChat - India's 1st AI with OpenRouter</title>
     <style>
         * {
             margin: 0;
@@ -223,9 +223,9 @@
             <div class="slider"></div>
             <label>Light</label>
         </div>
-        <div class="chat-header">WTIChat - India's 1st AI</div>
+        <div class="chat-header">WTIChat - India's 1st AI with OpenRouter</div>
         <div class="chat-body" id="chatBody">
-            <div class="chat-message bot-message">Namaste! I’m WTIChat, India's first AI. Shall we start with a traditional greeting or discuss something modern?</div>
+            <div class="chat-message bot-message">Namaste! I’m WTIChat, India's first AI powered by OpenRouter. Ask me anything!</div>
         </div>
         <div class="chat-input">
             <input type="text" id="userInput" placeholder="Type your message...">
@@ -258,7 +258,7 @@
             for (let msg of botMessages) msg.classList.toggle('light-mode');
         });
 
-        function sendMessage() {
+        async function sendMessage() {
             const input = document.getElementById('userInput');
             const chatBody = document.getElementById('chatBody');
             const message = input.value.trim();
@@ -270,22 +270,40 @@
                 userMsg.textContent = message;
                 chatBody.appendChild(userMsg);
 
-                // Bot response with Indian touch
-                const botMsg = document.createElement('div');
-                botMsg.className = 'chat-message bot-message';
-                let botResponse = '';
-                if (message.toLowerCase().includes('namaste')) {
-                    botResponse = 'Namaste back! How can I assist you today from the land of spices?';
-                } else if (message.toLowerCase().includes('festival')) {
-                    botResponse = 'India’s festivals are amazing! Diwali or Holi – which one do you love?';
-                } else if (message.toLowerCase().includes('weather')) {
-                    botResponse = 'Let me check India’s weather for you! Tell me your city.';
-                } else if (message.toLowerCase().includes('help')) {
-                    botResponse = 'Main aapki madad ke liye yahan hoon! Kya chahiye?';
-                } else {
-                    botResponse = `${message}! Kya baat hai, ab kya jaanna chahte ho?`;
+                // Call OpenRouter API
+                try {
+                    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer YOUR_API_KEY_HERE', // Replace with your OpenRouter API key
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model: 'mistralai/mixtral-8x7b-instruct', // Example model, change as per need
+                            messages: [
+                                { role: 'system', content: 'You are WTIChat, India\'s first AI. Respond with an Indian touch.' },
+                                { role: 'user', content: message }
+                            ],
+                            max_tokens: 150,
+                            temperature: 0.7
+                        })
+                    });
+
+                    const data = await response.json();
+                    const botResponse = data.choices[0].message.content.trim();
+
+                    // Bot message
+                    const botMsg = document.createElement('div');
+                    botMsg.className = 'chat-message bot-message';
+                    botMsg.textContent = botResponse;
+                    chatBody.appendChild(botMsg);
+                } catch (error) {
+                    console.error('Error fetching from OpenRouter:', error);
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'chat-message bot-message';
+                    errorMsg.textContent = 'Oops! Something went wrong. Check console for details.';
+                    chatBody.appendChild(errorMsg);
                 }
-                chatBody.appendChild(botMsg);
 
                 // Clear input and scroll
                 input.value = '';
